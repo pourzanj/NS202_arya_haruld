@@ -439,9 +439,15 @@ Lastly, we showed that activity level changes as a function of the number of Fit
 
 ## References
 [1] Justin McCarthy. In U.S., adult obesity rate now at 27.7%, May 2014. [Online; posted 22-May-2014].
+
 [2]  Anne M Wolf and Graham A Colditz. The cost of obesity.Pharmacoeconomics, 5(1):34-37, 1994.
+
 [3]  Ross C Brownson, Tegan K Boehmer, and Douglas A Luke. Declining rates of physical activity in the United States: what are the contributors? Annu. Rev. Public Health, 26:421-443, 2005
+
 [4] Albert Bandura. Health promotion by social cognitive means. Health education & behavior, 31(2):143-164, 2004.
+
 [5]  Kristina Orth-Gomer and Jeれy V Johnson. Social network interaction and mortality: a six year follow-up study of a random sample of the swedish population. Journal of chronic diseases, 40(10):949-957, 1987.
+
 [6]  James F Sallis, Robin M Grossman, Robin B Pinski, Thomas L Patterson, and Philip R Nader. The development of scales to measure social support for diet and exercise behaviors. Preventive medicine, 16(6):825-836, 1987.
+
 [7] Kevin Lewis, Marco Gonzalez, and Jason Kaufman. Social selection and peer in uence in an online social network. Proceedings of the National Academy of Sciences, 109(1):68-72, 2012
