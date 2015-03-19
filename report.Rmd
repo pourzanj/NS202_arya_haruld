@@ -1,0 +1,285 @@
+---
+title: 'Fitbit Friends: The social effect friends have on health'
+author: Arya Pourzanjani and Haraldur Tomas Hallgrimsson
+output:
+  html_document:
+    keep_md: yes
+bibliography: references.bib
+---
+
+## Introduction
+In the western world, declining activity levels are a huge cause for concern. In just six years, the adult obesity rate in the U.S. increased by more than two percent from 25.5% to 27.7% [@gallup], corresponding to an additional five million obese adults. The rise of obesity can be put into economic terms, with an estimated total cost of $US68.8 billion in 1990 [@wolf1994cost], when obesity rates were lower. 
+
+A driving force behind this trend is the rise of physical inactivity in general in the U.S. [@brownson2005declining]. On an individual level, the choice to be physically active and how much is not an isolated decision-these are decisions heavily influenced by one's social circles [@bandura2004health]. Having a large social network has been tied to a lower risk of dying [@orth1987social], and social support has been shown to influence diet as well as exercise levels [@sallis1987development].
+
+Believing that you can positively influence your own health habits and outcomes is a stumbling block for many [@bandura2004health] as the distance between cause and effect is very large; it can take weeks if not months between starting a new exercise regiment to actually start seeing the benefits in the mirror. We intend to study the effect of having physically active or health-conscious friends in your social network on your activity levels.
+
+## Purpose and Goals
+The purpose of this study is to utilize large health data sources to draw formal relationships between social influence and health, namely activity level and weight. Our goal is to examine the following:
+
+* The differences in weight (both mean weight and weight change over time) between Fitbit wearers and non-Fitbit wearers
+* How weight changes for Fitbit users as a function of the number of friends they have
+* How activity level changes for Fitbit users as a function of the number of friends they have
+
+## Methods
+In the earlier part of this section we describe our data, including a brief snapshot of the data and how we cleaned or filtered the data for robust inference. We then follow this with an overview of our inference techniques for addressing our goals.
+
+### Data Overview and Cleaning
+Our data is separated in to three categories: weight logging data, activity logging data, and friends data. In this section we describe where this data came from, what it looks like, and how we filtered or cleaned the data for robust inference. Weight logging data and the latter two types come from two different user populations. Thus not all weight loggers use Fitbit, and not all Fitbit users log their weight, but some do indeed log both. 
+
+#### Weight Loggging
+Weight logging data consists of time series of weight measurements for each user. The time series are sampled irregularly because they are self-reported weights, and users choose when to upload these logs.
+
+The validity of our inference is sensitive to certain irregularities in the time series we are using. For example, a time series with several samples in the beginning then no samples for a long time then a single sample, can give very misleading results concerning trend of the time series when doing a regression. As such, we compute a few basic features of each user's time series to ensure that we only conduct inference on valid time series. These features are the following
+
+* Logging Length (Weeks): How long the user's time series.
+* Daily Upload Percentage: The percentage of days over the user's entire time logging that we have actual logs for.
+* Total logs: Total number of days we have a weight log for the user.
+* Max. Break Between Logs: The length of the longest period where the user did not log.
+* Measurement Range Ratio: This quantity is the difference between the largest and smallest weight measurement a user recorded divided by the median of that user's measurements. It gives us a sense for time series with spurious, wild, or inaccurate measurements.
+
+We compute them as follows (note that this portion of the code is not run live at the time of the compilation of this document due to privacy concerns): 
+
+```{r}
+#weight_logging_info <-  raw_weight_logs %>%
+#  mutate(days_since_last_log = as.numeric(c(-1,diff(date)))) %>%
+#  summarize(logging_length_weeks = as.numeric(difftime(max(date), min(date), units="weeks")),
+#            log_upload_pctg = n()/(logging_length_weeks*7),
+#            n_logs = n(),
+#            max_logging_break = max(days_since_last_log),
+#            measurement_range_ratio = diff(range(value)) / median(value)
+#            ) %>%
+#  filter(log_upload_pctg <= 1)
+#save(weight_logging_info, file="weight_logging_info.Rdata")
+
+load(file="weight_logging_info.Rdata")
+```
+
+The following tables gives a distributional overview of these features for our population of `r nrow(weight_logging_info)` weightloggers.
+
+| Variable |  Mean  |  Std. Dev.  |  2.5%  | 25% | 50% | 75% | 97.5% |
+|:--------------:|:-------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|
+| Logging Length (Weeks) |`r round(mean(weight_logging_info$logging_length_weeks), digits=2)`|`r round(sd(weight_logging_info$logging_length_weeks), digits=2)`|`r round(quantile(weight_logging_info$logging_length_weeks, 0.025)[[1]],digits=2)`|`r round(quantile(weight_logging_info$logging_length_weeks, 0.25)[[1]],digits=2)`|`r round(quantile(weight_logging_info$logging_length_weeks, 0.5)[[1]],digits=2)`|`r round(quantile(weight_logging_info$logging_length_weeks, 0.75)[[1]],digits=2)`|`r round(quantile(weight_logging_info$logging_length_weeks, 0.975)[[1]],digits=2)`
+| Daily Upload Percentage|`r round(mean(weight_logging_info$log_upload_pctg), digits=2)`|`r round(sd(weight_logging_info$log_upload_pctg), digits=2)`|`r round(quantile(weight_logging_info$log_upload_pctg, 0.025)[[1]],digits=2)`|`r round(quantile(weight_logging_info$log_upload_pctg, 0.25)[[1]],digits=2)`|`r round(quantile(weight_logging_info$log_upload_pctg, 0.5)[[1]],digits=2)`|`r round(quantile(weight_logging_info$log_upload_pctg, 0.75)[[1]],digits=2)`|`r round(quantile(weight_logging_info$log_upload_pctg, 0.975)[[1]],digits=2)`
+| Total Logs |`r round(mean(weight_logging_info$n_logs), digits=2)`|`r round(sd(weight_logging_info$n_logs), digits=2)`|`r round(quantile(weight_logging_info$n_logs, 0.025)[[1]],digits=2)`|`r round(quantile(weight_logging_info$n_logs, 0.25)[[1]],digits=2)`|`r round(quantile(weight_logging_info$n_logs, 0.5)[[1]],digits=2)`|`r round(quantile(weight_logging_info$n_logs, 0.75)[[1]],digits=2)`|`r round(quantile(weight_logging_info$n_logs, 0.975)[[1]],digits=2)`
+| Max. Break Between Logs |`r round(mean(weight_logging_info$max_logging_break), digits=2)`|`r round(sd(weight_logging_info$max_logging_break), digits=2)`|`r round(quantile(weight_logging_info$max_logging_break, 0.025)[[1]],digits=2)`|`r round(quantile(weight_logging_info$max_logging_break, 0.25)[[1]],digits=2)`|`r round(quantile(weight_logging_info$max_logging_break, 0.5)[[1]],digits=2)`|`r round(quantile(weight_logging_info$max_logging_break, 0.75)[[1]],digits=2)`|`r round(quantile(weight_logging_info$max_logging_break, 0.975)[[1]],digits=2)`
+Measurement Range Ratio |`r round(mean(weight_logging_info$measurement_range_ratio), digits=2)`|`r round(sd(weight_logging_info$measurement_range_ratio), digits=2)`|`r round(quantile(weight_logging_info$measurement_range_ratio, 0.025)[[1]],digits=2)`|`r round(quantile(weight_logging_info$measurement_range_ratio, 0.25)[[1]],digits=2)`|`r round(quantile(weight_logging_info$measurement_range_ratio, 0.5)[[1]],digits=2)`|`r round(quantile(weight_logging_info$measurement_range_ratio, 0.75)[[1]],digits=2)`|`r round(quantile(weight_logging_info$measurement_range_ratio, 0.975)[[1]],digits=2)`    |
+
+```{r,message=FALSE}
+library(dplyr)
+weight_logging_info_clean <- weight_logging_info %>%
+  filter(logging_length_weeks >= 8) %>%
+  filter(log_upload_pctg >= 0.01) %>%
+  filter(n_logs >= 5) %>%
+  filter(max_logging_break <= 90) %>%
+  filter(measurement_range_ratio <= 0.4)
+```
+
+We filtered out users from our study based on the preceeding thresholds. This left us with a total of `r nrow(weight_logging_info_clean)` users. We note that when the last filter was applied (the filter for measurement ratio) the number of valid users decreased from approximately 5,000 to `r nrow(weight_logging_info_clean)`.
+
+#### Activity Level
+We computed the same set of features for the time series of activity levels of Fitbit users. These activity levels are essentially steps per day as measured by the Fitbit device. 
+
+```{r}
+#fitbit_logging_info <-  raw_fitbit_logs %>%
+#  mutate(days_since_last_log = as.numeric(c(-1,diff(date)))) %>%
+#  summarize(logging_length_weeks = as.numeric(difftime(max(date), min(date), units="weeks")),
+#            log_upload_pctg = n()/(logging_length_weeks*7),
+#            n_logs = n(),
+#            max_logging_break = max(days_since_last_log)
+#            ) %>%
+#  filter(log_upload_pctg <= 1)
+#save(fitbit_logging_info, file="fitbit_logging_info.Rdata")
+
+load(file="fitbit_logging_info.Rdata")
+```
+
+| Variable |  Mean  |  Std. Dev.  |  2.5%  | 25% | 50% | 75% | 97.5% |
+|:--------------:|:-------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|
+| Logging Length (Weeks) |`r round(mean(fitbit_logging_info$logging_length_weeks), digits=2)`|`r round(sd(fitbit_logging_info$logging_length_weeks), digits=2)`|`r round(quantile(fitbit_logging_info$logging_length_weeks, 0.025)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$logging_length_weeks, 0.25)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$logging_length_weeks, 0.5)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$logging_length_weeks, 0.75)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$logging_length_weeks, 0.975)[[1]],digits=2)`
+| Daily Upload Percentage|`r round(mean(fitbit_logging_info$log_upload_pctg), digits=2)`|`r round(sd(fitbit_logging_info$log_upload_pctg), digits=2)`|`r round(quantile(fitbit_logging_info$log_upload_pctg, 0.025)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$log_upload_pctg, 0.25)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$log_upload_pctg, 0.5)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$log_upload_pctg, 0.75)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$log_upload_pctg, 0.975)[[1]],digits=2)`
+| Total Logs |`r round(mean(fitbit_logging_info$n_logs), digits=2)`|`r round(sd(fitbit_logging_info$n_logs), digits=2)`|`r round(quantile(fitbit_logging_info$n_logs, 0.025)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$n_logs, 0.25)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$n_logs, 0.5)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$n_logs, 0.75)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$n_logs, 0.975)[[1]],digits=2)`
+| Max. Break Between Logs |`r round(mean(fitbit_logging_info$max_logging_break), digits=2)`|`r round(sd(fitbit_logging_info$max_logging_break), digits=2)`|`r round(quantile(fitbit_logging_info$max_logging_break, 0.025)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$max_logging_break, 0.25)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$max_logging_break, 0.5)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$max_logging_break, 0.75)[[1]],digits=2)`|`r round(quantile(fitbit_logging_info$max_logging_break, 0.975)[[1]],digits=2)`  |
+
+```{r}
+fitbit_logging_info_clean <- fitbit_logging_info %>%
+  filter(logging_length_weeks >= 8) %>%
+  filter(log_upload_pctg >= 0.6) %>%
+  filter(n_logs >= 5) %>%
+  filter(max_logging_break <= 30)
+```
+
+We place less stringent filtering constraints on the filtering of Fitbit users. This takes us from an original population of `r nrow(fitbit_logging_info)` to a population of `r nrow(fitbit_logging_info_clean)`.
+
+#### Fitbit Friends
+Fitbit allows its users to become friends with one another to communicate via the platform and observe eachother's activity levels. We use the number of friends of each user as a quantitative measurement to guage how social a user is.
+
+```{r}
+load("friends_df.Rdata")
+friends_df_clean <- friends_df %>%
+  filter(n_friends >= 0) %>%
+  filter(user_id %in% fitbit_logging_info_clean$user_id)
+```
+
+For the subset of Fitbit users we filtered for in the previous step we have the following distributional overview and histogram of friends.
+
+| Variable |  Mean  |  Std. Dev.  |  2.5%  | 25% | 50% | 75% | 97.5% |
+|:--------------:|:-------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|
+| Number of Friends |`r round(mean(friends_df_clean$n_friends), digits=2)`|`r round(sd(friends_df_clean$n_friends), digits=2)`|`r round(quantile(friends_df_clean$n_friends, 0.025)[[1]],digits=2)`|`r round(quantile(friends_df_clean$n_friends, 0.25)[[1]],digits=2)`|`r round(quantile(friends_df_clean$n_friends, 0.5)[[1]],digits=2)`|`r round(quantile(friends_df_clean$n_friends, 0.75)[[1]],digits=2)`|`r round(quantile(friends_df_clean$n_friends, 0.975)[[1]],digits=2)`
+
+```{r friends_histogram, message=FALSE}
+library(ggplot2)
+qplot(n_friends, data=friends_df_clean, xlab="Number of Friends", main="Histogram of Friends", binwidth=1, xlim=c(0,100))
+```
+
+### Models and Inference
+We take a formal statistical approach to conducting inference on our data.
+
+#### Time Series to Summary Statistics
+Drawing upon the study from [@lewis2012social], we fit a linear regression model of user's measurements over time, then use the estimated coefficients from these models as summary statistics for each user. This amounts to a mean term and a trend term for each time series of each user.
+
+#### Regression Models and Statistical Tests
+To assess the differences in weight and weight change over time between Fitbit users and non-Fitbit users, we use the non-parametric Wilcoxon test to check for differences in estimated mean and slope terms between the two respective populations.
+
+To asses the relationship that weight and activity levels have with the number of friends a person has, we fit ordinary linear regression models and conduct standard tests for significance. For these regression models we apply BoxCox transformations to our data where appropriate to control for heterscedasity and guard against spurious results. We also utilize how long a user has been logging in our regression models to control for that possible confounder.
+
+## Results
+In this section we provide results that answer our proposed goals.
+
+### Fitbit Effect on Weight
+```{r}
+#weight_slope <- raw_weight_logs %>%
+#  filter(user_id %in% weight_logging_info_clean$user_id) %>%
+#  group_by(user_id) %>%
+#  mutate(weeks_since_first_log=as.numeric(date-min(date)) / (60*60*24*7)) %>%
+#  do(model=lm(value~weeks_since_first_log, data=.)) %>%
+#  mutate(slope = summary(model)$coeff[2]) %>%
+#  select(-model)
+
+#weight_mean <- raw_weight_logs %>%
+#  filter(user_id %in% weight_logging_info_clean$user_id) %>%
+#  group_by(user_id) %>%
+#  summarize(mean_weight=mean(value)) %>%
+#  select(user_id, mean_weight)
+
+#weight_summary <- inner_join(weight_slope, weight_mean)
+#save(weight_summary, file="weight_summary.Rdata")
+
+load(file="weight_summary.Rdata")
+
+fitbit_effect <- weight_summary %>%
+  mutate(uses_fitbit=user_id %in% fitbit_logging_info_clean$user_id)
+```
+
+```{r fitbit_effect_mean}
+ggplot() + geom_density(aes(mean_weight, color=uses_fitbit),data=fitbit_effect)
+```
+
+```{r}
+fitbit_users <- fitbit_effect %>% filter(uses_fitbit==TRUE)
+nonfitbit_users <- fitbit_effect %>% filter(uses_fitbit==FALSE)
+wilcox.test(fitbit_users$mean_weight, nonfitbit_users$mean_weight)
+```
+
+Non-Fitbit users have a much larger tail in their distribution of mean weight. The Wilcoxon test confirms this difference in weight distribution between the two populations.
+
+```{r fitbit_effect_slope}
+ggplot() + geom_density(aes(slope, color=uses_fitbit), data=fitbit_effect)
+```
+
+```{r}
+wilcox.test(fitbit_users$slope, nonfitbit_users$slope)
+```
+
+The slope distribution of weight appears more similar for the two groups. Here we fail to reject the hypothesis that the data from the two groups comes from the same distribution.
+
+### Relationship Between Weight and Number of Fitbit Friends
+```{r, message=FALSE}
+weight_summary_friends <- inner_join(weight_summary, friends_df_clean)
+weight_summary_friends_length <- inner_join(weight_summary_friends, weight_logging_info_clean)
+```
+
+```{r boxcox_mean_weight, message=FALSE}
+library(MASS)
+boxcox(mean_weight~log(n_friends+1)+log(logging_length_weeks), data=weight_summary_friends_length)
+mean_weight_boxcox <- (weight_summary_friends_length$mean_weight^-2 - 1) / -2
+```
+
+```{r, scatter_marg_mean_weight, message=FALSE, fig.width=10, fig.height=10}
+source("scatter_marg.R")
+scatter_marg(log(weight_summary_friends_length$n_friends+1), mean_weight_boxcox, log(weight_summary_friends_length$logging_length_weeks), "Log(Number of Friends + 1)", "Boxcox Transform of Mean Weight", "Log(Log Length)", 0.1, 0.00001)
+```
+
+```{r}
+summary(lm(mean_weight_boxcox~log(n_friends+1)+log(logging_length_weeks), data=weight_summary_friends_length))
+```
+
+The scatterplot and regression model indicate no significant relationship between weight and the number of friends one has.
+
+```{r, scatter_marg_slope_weight, fig.width=10, fig.height=10}
+scatter_marg(log(weight_summary_friends_length$n_friends+1), weight_summary_friends_length$slope, log(weight_summary_friends_length$logging_length_weeks), "Log(Number of Friends + 1)", "Slope of Weight Over Time [lbs./week]", "Log(Length)", 0.1, 0.5)
+```
+
+```{r}
+summary(lm(slope~log(n_friends+1)+log(logging_length_weeks), data=weight_summary_friends_length))
+```
+
+We also see no relationship between the trend in weight and number of friends. There is however a highly significant relationship between the trend in weight and the length of time the user has been tracking their weight.
+
+### Relationship Between Activity Level and Number of Fitbit Friends
+```{r, message=FALSE}
+#activity_slope <- raw_fitbit_logs %>%
+# filter(user_id %in% fitbit_logging_info_clean$user_id) %>%
+#  group_by(user_id) %>%
+#  mutate(weeks_since_first_log=as.numeric(date-min(date)) / (60*60*24*7)) %>%
+#  do(model=lm(value~weeks_since_first_log, data=.)) %>%
+#  mutate(slope = summary(model)$coeff[2]) %>%
+#  select(-model)
+
+#activity_mean <- raw_fitbit_logs %>%
+#  filter(user_id %in% fitbit_logging_info_clean$user_id) %>%
+#  group_by(user_id) %>%
+#  summarize(mean_steps=mean(value)) %>%
+#  select(user_id, mean_steps)
+
+#activity_summary <- inner_join(activity_slope, activity_mean)
+#save(activity_summary, file="activity_summary.Rdata")
+
+load(file="activity_summary.Rdata")
+activity_summary_friends <- inner_join(activity_summary, friends_df_clean)
+activity_summary_friends_length <- inner_join(activity_summary_friends, fitbit_logging_info_clean)
+```
+
+```{r boxcox_mean_steps}
+boxcox(mean_steps~log(n_friends+1)+log(logging_length_weeks), data=activity_summary_friends_length)
+mean_steps_boxcox <- (activity_summary_friends_length$mean_steps^0.3 - 1) / 0.3
+```
+
+```{r, scatter_marg_mean_activity, fig.width=10, fig.height=10}
+scatter_marg(log(activity_summary_friends_length$n_friends+1), mean_steps_boxcox, log(activity_summary_friends_length$logging_length_weeks), "Log(Number of Friends + 1)", "Boxcox Transform of Mean Steps", "Log(Length)", 0.1, 1)
+```
+
+```{r}
+summary(lm(mean_steps_boxcox~log(n_friends+1)+log(logging_length_weeks), data=activity_summary_friends_length))
+```
+
+As shown in our scatterplot, there exists a highly significant relationship between the mean steps a user takes and the number of friends that user has, even when controling for the length of time a user has spent logging.
+
+```{r, scatter_marg_slope_activity, fig.width=10, fig.height=10}
+scatter_marg(log(activity_summary_friends_length$n_friends+1), activity_summary_friends_length$slope, log(activity_summary_friends_length$logging_length_weeks), "Log(Number of Friends + 1)", "Slope of Activity Over Time [steps/week]", "Log(Length)", 0.1, 100)
+```
+
+```{r}
+summary(lm(slope~log(n_friends+1)+log(logging_length_weeks), data=activity_summary_friends_length))
+```
+
+We fail to see a significant relationship between the slope in one's activity levels and the number of friends they have.
+
+## Discussion
+We showed in this study that there exists a significant difference in the distribution of weights of Fitbit users and non-Fitbit users. In particular, there are many heavy non-Fitbit users. On the other hand, we did not see a difference in weight trends between these two groups of users. One flaw in this trend factor however is that we assumed that users started logging their weight and tracking their Fitbit steps around the same time and had both kinds of measurements recently in time. This possible confounder could be a source for the lack of a discernbile difference that we would expect to see.
+
+We also showed that there were no differences in weight or differences in weight trends for Fitbit users with differing number of friends.
+
+Lastly, we showed that activity level changes as a function of the number of Fitbit friends one has, but trends in activity level does not. The former is sociologically significant and is cause for further research. The trend has the problem that number of friends were only available at the time of study and not throughout time, thus we make the assumption of a static friend network during a user's entire weight trajectory.
+
+## References
