@@ -2,11 +2,11 @@
 Arya Pourzanjani and Haraldur Tomas Hallgrimsson  
 
 ## Introduction
-In the western world, declining activity levels are a huge cause for concern. In just six years, the adult obesity rate in the U.S. increased by more than two percent from 25.5% to 27.7% [@gallup], corresponding to an additional five million obese adults. The rise of obesity can be put into economic terms, with an estimated total cost of $US68.8 billion in 1990 [@wolf1994cost], when obesity rates were lower. 
+In the western world, declining activity levels are a huge cause for concern. In just six years, the adult obesity rate in the U.S. increased by more than two percent from 25.5% to 27.7% [1], corresponding to an additional five million obese adults. The rise of obesity can be put into economic terms, with an estimated total cost of $US68.8 billion in 1990 [2], when obesity rates were lower. 
 
-A driving force behind this trend is the rise of physical inactivity in general in the U.S. [@brownson2005declining]. On an individual level, the choice to be physically active and how much is not an isolated decision-these are decisions heavily influenced by one's social circles [@bandura2004health]. Having a large social network has been tied to a lower risk of dying [@orth1987social], and social support has been shown to influence diet as well as exercise levels [@sallis1987development].
+A driving force behind this trend is the rise of physical inactivity in general in the U.S. [3]. On an individual level, the choice to be physically active and how much is not an isolated decision-these are decisions heavily influenced by one's social circles [4]. Having a large social network has been tied to a lower risk of dying [5], and social support has been shown to influence diet as well as exercise levels [6].
 
-Believing that you can positively influence your own health habits and outcomes is a stumbling block for many [@bandura2004health] as the distance between cause and effect is very large; it can take weeks if not months between starting a new exercise regiment to actually start seeing the benefits in the mirror. We intend to study the effect of having physically active or health-conscious friends in your social network on your activity levels.
+Believing that you can positively influence your own health habits and outcomes is a stumbling block for many [7] as the distance between cause and effect is very large; it can take weeks if not months between starting a new exercise regiment to actually start seeing the benefits in the mirror. We intend to study the effect of having physically active or health-conscious friends in your social network on your activity levels.
 
 ## Purpose and Goals
 The purpose of this study is to utilize large health data sources to draw formal relationships between social influence and health, namely activity level and weight. Our goal is to examine the following:
@@ -438,3 +438,10 @@ We also showed that there were no differences in weight or differences in weight
 Lastly, we showed that activity level changes as a function of the number of Fitbit friends one has, but trends in activity level does not. The former is sociologically significant and is cause for further research. The trend has the problem that number of friends were only available at the time of study and not throughout time, thus we make the assumption of a static friend network during a user's entire weight trajectory.
 
 ## References
+[1] Justin McCarthy. In U.S., adult obesity rate now at 27.7%, May 2014. [Online; posted 22-May-2014].
+[2] Anne M Wolf and Graham A Colditz. The cost of obesity.Pharmacoeconomics, 5(1):34-37, 1994.
+[3] Ross C Brownson, Tegan K Boehmer, and Douglas A Luke. Declining rates of physical activity in the United States: what are the contributors? Annu. Rev. Public Health, 26:421-443, 2005
+[4] Albert Bandura. Health promotion by social cognitive means. Health education & behavior, 31(2):143-164, 2004.
+[5] Kristina Orth-Gomer and Jeれy V Johnson. Social network interaction and mortality: a six year follow-up study of a random sample of the swedish population. Journal of chronic diseases, 40(10):949-957, 1987.
+[6] James F Sallis, Robin M Grossman, Robin B Pinski, Thomas L Patterson, and Philip R Nader. The development of scales to measure social support for diet and exercise behaviors. Preventive medicine, 16(6):825-836, 1987.
+[7] Albert Bandura. Health promotion by social cognitive means. Health education & behavior, 31(2):143-164, 2004.
