@@ -6,7 +6,7 @@ In the western world, declining activity levels are a huge cause for concern. In
 
 A driving force behind this trend is the rise of physical inactivity in general in the U.S. [3]. On an individual level, the choice to be physically active and how much is not an isolated decision-these are decisions heavily influenced by one's social circles [4]. Having a large social network has been tied to a lower risk of dying [5], and social support has been shown to influence diet as well as exercise levels [6].
 
-Believing that you can positively influence your own health habits and outcomes is a stumbling block for many [7] as the distance between cause and effect is very large; it can take weeks if not months between starting a new exercise regiment to actually start seeing the benefits in the mirror. We intend to study the effect of having physically active or health-conscious friends in your social network on your activity levels.
+Believing that you can positively influence your own health habits and outcomes is a stumbling block for many [4] as the distance between cause and effect is very large; it can take weeks if not months between starting a new exercise regiment to actually start seeing the benefits in the mirror. We intend to study the effect of having physically active or health-conscious friends in your social network on your activity levels.
 
 ## Purpose and Goals
 The purpose of this study is to utilize large health data sources to draw formal relationships between social influence and health, namely activity level and weight. Our goal is to examine the following:
@@ -19,14 +19,14 @@ The purpose of this study is to utilize large health data sources to draw formal
 In the earlier part of this section we describe our data, including a brief snapshot of the data and how we cleaned or filtered the data for robust inference. We then follow this with an overview of our inference techniques for addressing our goals.
 
 ### Data Overview and Cleaning
-Our data is separated in to three categories: weight logging data, activity logging data, and friends data. In this section we describe where this data came from, what it looks like, and how we filtered or cleaned the data for robust inference. Weight logging data and the latter two types come from two different user populations. Thus not all weight loggers use Fitbit, and not all Fitbit users log their weight, but some do indeed log both. 
+Our data is separated into three categories: weight logging data, activity logging data, and friends data. In this section we describe where this data came from, what it looks like, and how we filtered or cleaned the data for robust inference. Weight logging data and the latter two types come from two different user populations. Thus not all weight loggers use Fitbit and not all Fitbit users log their weight, but some do indeed log both. 
 
 #### Weight Loggging
 Weight logging data consists of time series of weight measurements for each user. The time series are sampled irregularly because they are self-reported weights, and users choose when to upload these logs.
 
 The validity of our inference is sensitive to certain irregularities in the time series we are using. For example, a time series with several samples in the beginning then no samples for a long time then a single sample, can give very misleading results concerning trend of the time series when doing a regression. As such, we compute a few basic features of each user's time series to ensure that we only conduct inference on valid time series. These features are the following
 
-* Logging Length (Weeks): How long the user's time series.
+* Logging Length (Weeks): Length in time between first and last log. 
 * Daily Upload Percentage: The percentage of days over the user's entire time logging that we have actual logs for.
 * Total logs: Total number of days we have a weight log for the user.
 * Max. Break Between Logs: The length of the longest period where the user did not log.
@@ -110,7 +110,7 @@ fitbit_logging_info_clean <- fitbit_logging_info %>%
 We place less stringent filtering constraints on the filtering of Fitbit users. This takes us from an original population of 11765 to a population of 5405.
 
 #### Fitbit Friends
-Fitbit allows its users to become friends with one another to communicate via the platform and observe eachother's activity levels. We use the number of friends of each user as a quantitative measurement to guage how social a user is.
+Fitbit allows its users to become friends with one another to communicate via the platform and observe each other's activity levels. We use the number of friends of each user as a quantitative measurement to guage how social a user is.
 
 
 ```r
@@ -138,7 +138,7 @@ qplot(n_friends, data=friends_df_clean, xlab="Number of Friends", main="Histogra
 We take a formal statistical approach to conducting inference on our data.
 
 #### Time Series to Summary Statistics
-Drawing upon the study from [@lewis2012social], we fit a linear regression model of user's measurements over time, then use the estimated coefficients from these models as summary statistics for each user. This amounts to a mean term and a trend term for each time series of each user.
+Drawing upon the study from [7], we fit a linear regression model of user's measurements over time, then use the estimated coefficients from these models as summary statistics for each user. This amounts to a mean term and a trend term for each time series of each user.
 
 #### Regression Models and Statistical Tests
 To assess the differences in weight and weight change over time between Fitbit users and non-Fitbit users, we use the non-parametric Wilcoxon test to check for differences in estimated mean and slope terms between the two respective populations.
@@ -439,9 +439,9 @@ Lastly, we showed that activity level changes as a function of the number of Fit
 
 ## References
 [1] Justin McCarthy. In U.S., adult obesity rate now at 27.7%, May 2014. [Online; posted 22-May-2014].
-[2] Anne M Wolf and Graham A Colditz. The cost of obesity.Pharmacoeconomics, 5(1):34-37, 1994.
-[3] Ross C Brownson, Tegan K Boehmer, and Douglas A Luke. Declining rates of physical activity in the United States: what are the contributors? Annu. Rev. Public Health, 26:421-443, 2005
+[2]  Anne M Wolf and Graham A Colditz. The cost of obesity.Pharmacoeconomics, 5(1):34-37, 1994.
+[3]  Ross C Brownson, Tegan K Boehmer, and Douglas A Luke. Declining rates of physical activity in the United States: what are the contributors? Annu. Rev. Public Health, 26:421-443, 2005
 [4] Albert Bandura. Health promotion by social cognitive means. Health education & behavior, 31(2):143-164, 2004.
-[5] Kristina Orth-Gomer and Jeれy V Johnson. Social network interaction and mortality: a six year follow-up study of a random sample of the swedish population. Journal of chronic diseases, 40(10):949-957, 1987.
-[6] James F Sallis, Robin M Grossman, Robin B Pinski, Thomas L Patterson, and Philip R Nader. The development of scales to measure social support for diet and exercise behaviors. Preventive medicine, 16(6):825-836, 1987.
-[7] Albert Bandura. Health promotion by social cognitive means. Health education & behavior, 31(2):143-164, 2004.
+[5]  Kristina Orth-Gomer and Jeれy V Johnson. Social network interaction and mortality: a six year follow-up study of a random sample of the swedish population. Journal of chronic diseases, 40(10):949-957, 1987.
+[6]  James F Sallis, Robin M Grossman, Robin B Pinski, Thomas L Patterson, and Philip R Nader. The development of scales to measure social support for diet and exercise behaviors. Preventive medicine, 16(6):825-836, 1987.
+[7] Kevin Lewis, Marco Gonzalez, and Jason Kaufman. Social selection and peer in uence in an online social network. Proceedings of the National Academy of Sciences, 109(1):68-72, 2012
